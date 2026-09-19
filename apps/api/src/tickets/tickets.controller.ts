@@ -18,27 +18,27 @@ export class TicketsController {
     }
 
     @Get()
-    findAll(@Query('status') status?: TicketStatus, @Query('unitId') unitId?: string) {
-        return this.ticketsService.findAll({ status, unitId });
+    findAll(@Query('status') status: TicketStatus | undefined, @Query('unitId') unitId: string | undefined, @CurrentUser() user: AuthUser) {
+        return this.ticketsService.findAll({ status, unitId }, user);
     }
 
     @Get(':id/events')
-    findEvents(@Param('id') id: string) {
-        return this.ticketsService.findEvents(id);
+    findEvents(@Param('id') id: string, @CurrentUser() user: AuthUser) {
+        return this.ticketsService.findEvents(id, user);
     }
 
     @Get(':id')
-    findOne(@Param('id') id: string) {
-        return this.ticketsService.findOne(id);
+    findOne(@Param('id') id: string, @CurrentUser() user: AuthUser) {
+        return this.ticketsService.findOne(id, user);
     }
 
     @Patch(':id')
-    update(@Param('id') id: string, @Body() dto: UpdateTicketDto) {
-        return this.ticketsService.update(id, dto);
+    update(@Param('id') id: string, @Body() dto: UpdateTicketDto, @CurrentUser() user: AuthUser) {
+        return this.ticketsService.update(id, dto, user);
     }
 
     @Post(':id/close')
-    close(@Param('id') id: string) {
-        return this.ticketsService.close(id);
+    close(@Param('id') id: string, @CurrentUser() user: AuthUser) {
+        return this.ticketsService.close(id, user);
     }
 }

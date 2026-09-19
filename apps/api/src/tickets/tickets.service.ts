@@ -8,6 +8,7 @@ import { CreateTicketDto } from './dto/create-ticket.dto.js';
 import { UpdateTicketDto } from './dto/update-ticket.dto.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { AuthUser } from '../auth/auth.types.js';
+import { AuthorizationService } from '../authorization/authorization.service.js';
 
 const ticketInclude = {
     unit: { include: { property: true } },
@@ -16,9 +17,15 @@ const ticketInclude = {
 
 @Injectable()
 export class TicketsService {
-    constructor(private readonly prisma: PrismaService) { }
+    constructor(
+        private readonly prisma: PrismaService,
+        private readonly authorization: AuthorizationService,
+    ) { }
 
     async create(dto: CreateTicketDto, user: AuthUser) {
+        this.authorization.authorize(user, 'CreateTicket', {
+            uid: { type: 'Unit', id: dto.unitId }, attrs: {}, parents: [],
+        });
         return this.prisma.$transaction(async (transaction) => {
             const ticket = await transaction.ticket.create({
                 data: {
@@ -37,25 +44,33 @@ export class TicketsService {
         });
     }
 
-    findAll(filters: { status?: TicketStatus; unitId?: string }) {
-        return this.prisma.ticket.findMany({
+    async findAll(filters: { status?: TicketStatus; unitId?: string }, user: AuthUser) {
+        const tickets = await this.prisma.ticket.findMany({
             where: { status: filters.status, unitId: filters.unitId },
             include: ticketInclude,
             orderBy: { createdAt: 'desc' },
         });
+        return tickets.filter((ticket) => {
+            try {
+                this.authorization.authorize(user, 'ViewTicket', this.authorization.ticketResource(ticket));
+                return true;
+            } catch { return false; }
+        });
     }
 
-    async findOne(id: string) {
+    async findOne(id: string, user: AuthUser) {
         const ticket = await this.prisma.ticket.findUnique({
             where: { id },
             include: { ...ticketInclude, events: { orderBy: { createdAt: 'asc' } } },
         });
         if (!ticket) throw new NotFoundException(`Ticket ${id} was not found.`);
+        this.authorization.authorize(user, 'ViewTicket', this.authorization.ticketResource(ticket));
         return ticket;
     }
 
-    async update(id: string, dto: UpdateTicketDto) {
+    async update(id: string, dto: UpdateTicketDto, user: AuthUser) {
         const existing = await this.getExisting(id);
+        this.authorization.authorize(user, 'UpdateTicket', this.authorization.ticketResource(existing));
         if (existing.status === TicketStatus.CLOSED) {
             throw new ConflictException('Closed tickets cannot be updated.');
         }
@@ -90,8 +105,9 @@ export class TicketsService {
         });
     }
 
-    async close(id: string) {
+    async close(id: string, user: AuthUser) {
         const existing = await this.getExisting(id);
+        this.authorization.authorize(user, 'CloseTicket', this.authorization.ticketResource(existing));
         if (existing.status === TicketStatus.CLOSED) {
             throw new ConflictException('Ticket is already closed.');
         }
@@ -113,8 +129,9 @@ export class TicketsService {
         });
     }
 
-    async findEvents(id: string) {
-        await this.getExisting(id);
+    async findEvents(id: string, user: AuthUser) {
+        const ticket = await this.getExisting(id);
+        this.authorization.authorize(user, 'ViewTicket', this.authorization.ticketResource(ticket));
         return this.prisma.ticketEvent.findMany({
             where: { ticketId: id },
             orderBy: { createdAt: 'asc' },

@@ -10,6 +10,9 @@ describe('Tickets API (e2e)', () => {
     let unitId: string;
     let ticketId: string;
     let accessToken: string;
+    let landlordToken: string;
+    let contractorToken: string;
+    let adminToken: string;
 
     beforeAll(async () => {
         const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -32,6 +35,18 @@ describe('Tickets API (e2e)', () => {
             .send({ email: 'tenant@tracehold.local', password: 'tracehold-demo-tenant' })
             .expect(201);
         accessToken = login.body.accessToken;
+        landlordToken = (await request(app.getHttpServer())
+            .post('/auth/login')
+            .send({ email: 'landlord@tracehold.local', password: 'tracehold-demo-landlord' })
+            .expect(201)).body.accessToken;
+        contractorToken = (await request(app.getHttpServer())
+            .post('/auth/login')
+            .send({ email: 'contractor@tracehold.local', password: 'tracehold-demo-contractor' })
+            .expect(201)).body.accessToken;
+        adminToken = (await request(app.getHttpServer())
+            .post('/auth/login')
+            .send({ email: 'admin@tracehold.local', password: 'tracehold-demo-admin' })
+            .expect(201)).body.accessToken;
     });
 
     it('runs the ticket lifecycle and records events', async () => {
@@ -68,7 +83,17 @@ describe('Tickets API (e2e)', () => {
         await request(app.getHttpServer())
             .post(`/tickets/${ticketId}/close`)
             .set('Authorization', `Bearer ${accessToken}`)
+            .expect(403);
+
+        await request(app.getHttpServer())
+            .post(`/tickets/${ticketId}/close`)
+            .set('Authorization', `Bearer ${landlordToken}`)
             .expect(201);
+
+        await request(app.getHttpServer())
+            .get(`/tickets/${ticketId}`)
+            .set('Authorization', `Bearer ${adminToken}`)
+            .expect(200);
 
         const events = await request(app.getHttpServer())
             .get(`/tickets/${ticketId}/events`)
@@ -97,6 +122,20 @@ describe('Tickets API (e2e)', () => {
             .set('Authorization', `Bearer ${accessToken}`)
             .expect(404);
         await request(app.getHttpServer()).get('/tickets').expect(401);
+    });
+
+    it('allows contractors to update assigned tickets but not close them', async () => {
+        const assignedTicket = 'ticket-unit-304-pipe-leak';
+        await request(app.getHttpServer())
+            .patch(`/tickets/${assignedTicket}`)
+            .set('Authorization', `Bearer ${contractorToken}`)
+            .send({ description: 'Contractor inspected the assigned pipe leak.' })
+            .expect(200);
+
+        await request(app.getHttpServer())
+            .post(`/tickets/${assignedTicket}/close`)
+            .set('Authorization', `Bearer ${contractorToken}`)
+            .expect(403);
     });
 
     afterAll(async () => {
