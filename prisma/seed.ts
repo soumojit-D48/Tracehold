@@ -1,11 +1,5 @@
 import { PrismaPg } from '@prisma/adapter-pg';
-import {
-    PrismaClient,
-    TicketCategory,
-    TicketSeverity,
-    TicketStatus,
-    UserRole,
-} from '@prisma/client';
+import { PrismaClient, TicketCategory, TicketSeverity, TicketStatus, UserRole } from '../apps/api/src/generated/prisma/client.js';
 import { Pool } from 'pg';
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
