@@ -8,7 +8,7 @@
       POSTGRES_PASSWORD: tracehold
       POSTGRES_DB: tracehold
     ports:
-      - "15432:5432"
+      - "35432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
