@@ -11,10 +11,12 @@ import { EventsModule } from './events/events.module.js';
 import { AuthorizationModule } from './authorization/authorization.module.js';
 import { SearchModule } from './search/search.module.js';
 import { EvidenceModule } from './evidence/evidence.module.js';
+import { PrismaModule } from './prisma/prisma.module.js';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    PrismaModule,
     AuthModule,
     UsersModule,
     PropertiesModule,
@@ -28,4 +30,4 @@ import { EvidenceModule } from './evidence/evidence.module.js';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }
