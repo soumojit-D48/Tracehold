@@ -9,6 +9,7 @@ import { UpdateTicketDto } from './dto/update-ticket.dto.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { AuthUser } from '../auth/auth.types.js';
 import { AuthorizationService } from '../authorization/authorization.service.js';
+import { EventPublisherService } from '../events/event-publisher.service.js';
 
 const ticketInclude = {
     unit: { include: { property: true } },
@@ -20,13 +21,14 @@ export class TicketsService {
     constructor(
         private readonly prisma: PrismaService,
         private readonly authorization: AuthorizationService,
+        private readonly eventPublisher: EventPublisherService,
     ) { }
 
     async create(dto: CreateTicketDto, user: AuthUser) {
         this.authorization.authorize(user, 'CreateTicket', {
             uid: { type: 'Unit', id: dto.unitId }, attrs: {}, parents: [],
         });
-        return this.prisma.$transaction(async (transaction) => {
+        const { ticket, event } = await this.prisma.$transaction(async (transaction) => {
             const ticket = await transaction.ticket.create({
                 data: {
                     unitId: dto.unitId,
@@ -37,11 +39,18 @@ export class TicketsService {
                 },
                 include: ticketInclude,
             });
-            await transaction.ticketEvent.create({
+            const event = await transaction.ticketEvent.create({
                 data: { ticketId: ticket.id, actorId: user.id, type: 'TicketCreated' },
             });
-            return ticket;
+            return { ticket, event };
         });
+        await this.eventPublisher.publishTicketCreated({
+            eventId: event.id,
+            eventType: 'TicketCreated',
+            ticketId: ticket.id,
+            occurredAt: event.createdAt.toISOString(),
+        });
+        return ticket;
     }
 
     async findAll(filters: { status?: TicketStatus; unitId?: string }, user: AuthUser) {

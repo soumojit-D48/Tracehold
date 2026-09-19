@@ -1,10 +1,15 @@
 import { ForbiddenException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { isAuthorized, type AuthorizationCall, type EntityJson } from '@cedar-policy/cedar-wasm/nodejs';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { AuthUser } from '../auth/auth.types.js';
 
-const policyPath = resolve(process.cwd(), '../../cedar/policies/tracehold.cedar');
+const policyCandidates = [
+    resolve(process.cwd(), 'cedar/policies/tracehold.cedar'),
+    resolve(process.cwd(), '../../cedar/policies/tracehold.cedar'),
+];
+const policyPath = policyCandidates.find((candidate) => existsSync(candidate));
+if (!policyPath) throw new Error('Cedar policy file was not found.');
 const policyText = readFileSync(policyPath, 'utf8');
 
 @Injectable()

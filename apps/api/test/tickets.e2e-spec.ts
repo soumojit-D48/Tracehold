@@ -3,6 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import { PrismaService } from '../src/prisma/prisma.service.js';
 import { AppModule } from '../src/app.module.js';
+import { EventPublisherService } from '../src/events/event-publisher.service.js';
 import request from 'supertest';
 
 describe('Tickets API (e2e)', () => {
@@ -17,7 +18,10 @@ describe('Tickets API (e2e)', () => {
     beforeAll(async () => {
         const moduleFixture: TestingModule = await Test.createTestingModule({
             imports: [AppModule],
-        }).compile();
+        })
+            .overrideProvider(EventPublisherService)
+            .useValue({ publishTicketCreated: vi.fn() })
+            .compile();
 
         app = moduleFixture.createNestApplication();
         app.useGlobalPipes(

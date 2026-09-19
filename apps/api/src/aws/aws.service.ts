@@ -1,4 +1,4 @@
-import { GetQueueUrlCommand, SQSClient } from '@aws-sdk/client-sqs';
+import { GetQueueUrlCommand, SendMessageCommand, SQSClient } from '@aws-sdk/client-sqs';
 import { Injectable, OnModuleDestroy } from '@nestjs/common';
 
 @Injectable()
@@ -16,6 +16,15 @@ export class AwsService implements OnModuleDestroy {
 
     getEventsQueueUrl() {
         return this.client.send(new GetQueueUrlCommand({ QueueName: this.queueName }));
+    }
+
+    async publishEvent(event: Record<string, string>) {
+        const { QueueUrl } = await this.getEventsQueueUrl();
+        if (!QueueUrl) throw new Error(`SQS queue URL was not found for ${this.queueName}.`);
+        return this.client.send(new SendMessageCommand({
+            QueueUrl,
+            MessageBody: JSON.stringify(event),
+        }));
     }
 
     async onModuleDestroy() {

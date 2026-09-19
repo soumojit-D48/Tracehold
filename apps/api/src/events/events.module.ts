@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { EventPublisherService } from './event-publisher.service.js';
 
-@Module({})
-export class EventsModule {}
+@Module({ providers: [EventPublisherService], exports: [EventPublisherService] })
+export class EventsModule { }
