@@ -1,0 +1,120 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+}
+
+enum UserRole {
+    TENANT
+    CONTRACTOR
+    LANDLORD
+    ADMIN
+}
+
+enum TicketCategory {
+    WATER_DAMAGE
+    PLUMBING
+    ELECTRICAL
+    HVAC
+    STRUCTURAL
+    OTHER
+}
+
+enum TicketSeverity {
+    LOW
+    MEDIUM
+    HIGH
+    CRITICAL
+}
+
+enum TicketStatus {
+    OPEN
+    IN_PROGRESS
+    RESOLVED
+    CLOSED
+    ESCALATED
+    EVIDENCE_READY
+}
+
+model User {
+    id             String        @id @default(cuid())
+    name           String
+    email          String        @unique
+    role           UserRole
+    createdAt      DateTime      @default(now())
+    updatedAt      DateTime      @updatedAt
+    createdTickets Ticket[]      @relation("TicketCreator")
+    ticketEvents   TicketEvent[] @relation("EventActor")
+}
+
+model Property {
+    id        String   @id @default(cuid())
+    name      String
+    address   String
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+    units     Unit[]
+}
+
+model Unit {
+    id         String   @id @default(cuid())
+    propertyId String
+    unitNumber String
+    createdAt  DateTime @default(now())
+    updatedAt  DateTime @updatedAt
+    property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+    tickets    Ticket[]
+
+    @@unique([propertyId, unitNumber])
+    @@index([propertyId])
+}
+
+model Ticket {
+    id          String         @id @default(cuid())
+    unitId      String
+    createdById String
+    category    TicketCategory
+    description String
+    severity    TicketSeverity
+    status      TicketStatus   @default(OPEN)
+    createdAt   DateTime       @default(now())
+    updatedAt   DateTime       @updatedAt
+    resolvedAt  DateTime?
+    unit        Unit           @relation(fields: [unitId], references: [id], onDelete: Cascade)
+    createdBy   User           @relation("TicketCreator", fields: [createdById], references: [id])
+    events      TicketEvent[]
+    evidence    Evidence[]
+
+    @@index([unitId])
+    @@index([createdById])
+    @@index([status])
+}
+
+model TicketEvent {
+    id        String   @id @default(cuid())
+    ticketId  String
+    type      String
+    actorId   String?
+    metadata  Json?
+    createdAt DateTime @default(now())
+    ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+    actor     User?    @relation("EventActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+    @@index([ticketId, createdAt])
+}
+
+model Evidence {
+    id             String   @id @default(cuid())
+    ticketId       String
+    summary        String
+    timeline       Json
+    relatedTickets String[]
+    noticeDraft    String?
+    generatedAt    DateTime @default(now())
+    modelMetadata  Json?
+    ticket         Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+    @@index([ticketId])
+}

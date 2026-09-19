@@ -1,0 +1,16 @@
+﻿services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: tracehold-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: tracehold
+      POSTGRES_PASSWORD: tracehold
+      POSTGRES_DB: tracehold
+    ports:
+      - "15432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
