@@ -40,15 +40,16 @@ enum TicketStatus {
 }
 
 model User {
-    id             String        @id @default(cuid())
-    name           String
-    email          String        @unique
-    passwordHash   String
-    role           UserRole
-    createdAt      DateTime      @default(now())
-    updatedAt      DateTime      @updatedAt
-    createdTickets Ticket[]      @relation("TicketCreator")
-    ticketEvents   TicketEvent[] @relation("EventActor")
+    id              String        @id @default(cuid())
+    name            String
+    email           String        @unique
+    passwordHash    String
+    role            UserRole
+    createdAt       DateTime      @default(now())
+    updatedAt       DateTime      @updatedAt
+    createdTickets  Ticket[]      @relation("TicketCreator")
+    ticketEvents    TicketEvent[] @relation("EventActor")
+    assignedTickets Ticket[]      @relation("TicketAssignee")
 }
 
 model Property {
@@ -74,23 +75,26 @@ model Unit {
 }
 
 model Ticket {
-    id          String         @id @default(cuid())
-    unitId      String
-    createdById String
-    category    TicketCategory
-    description String
-    severity    TicketSeverity
-    status      TicketStatus   @default(OPEN)
-    createdAt   DateTime       @default(now())
-    updatedAt   DateTime       @updatedAt
-    resolvedAt  DateTime?
-    unit        Unit           @relation(fields: [unitId], references: [id], onDelete: Cascade)
-    createdBy   User           @relation("TicketCreator", fields: [createdById], references: [id])
-    events      TicketEvent[]
-    evidence    Evidence[]
+    id           String         @id @default(cuid())
+    unitId       String
+    createdById  String
+    assignedToId String?
+    category     TicketCategory
+    description  String
+    severity     TicketSeverity
+    status       TicketStatus   @default(OPEN)
+    createdAt    DateTime       @default(now())
+    updatedAt    DateTime       @updatedAt
+    resolvedAt   DateTime?
+    unit         Unit           @relation(fields: [unitId], references: [id], onDelete: Cascade)
+    createdBy    User           @relation("TicketCreator", fields: [createdById], references: [id])
+    assignedTo   User?          @relation("TicketAssignee", fields: [assignedToId], references: [id], onDelete: SetNull)
+    events       TicketEvent[]
+    evidence     Evidence[]
 
     @@index([unitId])
     @@index([createdById])
+    @@index([assignedToId])
     @@index([status])
 }
 

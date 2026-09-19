@@ -27,7 +27,8 @@ async function main() {
         ),
     );
     const tenant = users.find((user) => user.role === UserRole.TENANT);
-    if (!tenant) throw new Error('Demo tenant was not created');
+    const contractor = users.find((user) => user.role === UserRole.CONTRACTOR);
+    if (!tenant || !contractor) throw new Error('Demo tenant and contractor were not created');
 
     const property = await prisma.property.upsert({
         where: { id: 'maple-residency' },
@@ -86,8 +87,16 @@ async function main() {
     for (const ticket of historicalTickets) {
         await prisma.ticket.upsert({
             where: { id: ticket.id },
-            update: ticket,
-            create: { ...ticket, unitId: unit304.id, createdById: tenant.id },
+            update: {
+                ...ticket,
+                assignedToId: ticket.id === 'ticket-unit-304-pipe-leak' ? contractor.id : undefined,
+            },
+            create: {
+                ...ticket,
+                unitId: unit304.id,
+                createdById: tenant.id,
+                assignedToId: ticket.id === 'ticket-unit-304-pipe-leak' ? contractor.id : undefined,
+            },
         });
     }
 
