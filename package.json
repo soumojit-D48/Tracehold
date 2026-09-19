@@ -1,0 +1,15 @@
+{
+  "name": "tracehold",
+  "version": "0.0.1",
+  "private": true,
+  "packageManager": "pnpm@10.32.1",
+  "scripts": {
+    "build": "pnpm -r --if-present build",
+    "lint": "pnpm -r --if-present lint",
+    "test": "pnpm -r --if-present test",
+    "dev": "pnpm -r --parallel --if-present dev"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3"
+  }
+}
