@@ -1,0 +1,44 @@
+{
+  "commonTypes": {},
+  "entityTypes": {
+    "User": {
+      "shape": {
+        "type": "Record",
+        "attributes": {
+          "role": { "type": "String" }
+        }
+      }
+    },
+    "Ticket": {
+      "shape": {
+        "type": "Record",
+        "attributes": {
+          "createdBy": { "type": "Entity", "name": "User" },
+          "assignedTo": { "type": "Entity", "name": "User" }
+        }
+      }
+    },
+    "Unit": { "shape": { "type": "Record", "attributes": {} } },
+    "Property": { "shape": { "type": "Record", "attributes": {} } }
+  },
+  "actions": {
+    "CreateTicket": {
+      "appliesTo": { "principalTypes": ["User"], "resourceTypes": ["Unit"] }
+    },
+    "ViewTicket": {
+      "appliesTo": { "principalTypes": ["User"], "resourceTypes": ["Ticket"] }
+    },
+    "UpdateTicket": {
+      "appliesTo": { "principalTypes": ["User"], "resourceTypes": ["Ticket"] }
+    },
+    "CloseTicket": {
+      "appliesTo": { "principalTypes": ["User"], "resourceTypes": ["Ticket"] }
+    },
+    "AddRepairNote": {
+      "appliesTo": { "principalTypes": ["User"], "resourceTypes": ["Ticket"] }
+    },
+    "GenerateEvidence": {
+      "appliesTo": { "principalTypes": ["User"], "resourceTypes": ["Ticket"] }
+    }
+  }
+}
