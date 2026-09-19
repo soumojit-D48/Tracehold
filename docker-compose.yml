@@ -12,5 +12,35 @@
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  opensearch:
+    image: opensearchproject/opensearch:2.19.1
+    container_name: tracehold-opensearch
+    restart: unless-stopped
+    environment:
+      - discovery.type=single-node
+      - DISABLE_SECURITY_PLUGIN=true
+      - DISABLE_INSTALL_DEMO_CONFIG=true
+      - OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - "9200:9200"
+    volumes:
+      - opensearch_data:/usr/share/opensearch/data
+
+  localstack:
+    image: localstack/localstack:4.4
+    container_name: tracehold-localstack
+    restart: unless-stopped
+    environment:
+      - SERVICES=sqs
+      - AWS_DEFAULT_REGION=us-east-1
+      - DEBUG=0
+    ports:
+      - "4566:4566"
+    volumes:
+      - localstack_data:/var/lib/localstack
+      - ./infrastructure/localstack/init-aws.sh:/etc/localstack/init/ready.d/init-aws.sh
+
 volumes:
   postgres_data:
+  opensearch_data:
+  localstack_data:

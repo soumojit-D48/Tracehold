@@ -10,7 +10,8 @@
     "dev": "pnpm -r --parallel --if-present dev",
     "prisma": "prisma",
     "prisma:generate": "prisma generate",
-    "prisma:seed": "prisma db seed"
+    "prisma:seed": "prisma db seed",
+    "infra:up": "docker compose up -d"
   },
   "devDependencies": {
     "@types/pg": "^8.15.5",
