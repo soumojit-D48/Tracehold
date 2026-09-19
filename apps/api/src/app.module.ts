@@ -12,11 +12,13 @@ import { AuthorizationModule } from './authorization/authorization.module.js';
 import { SearchModule } from './search/search.module.js';
 import { EvidenceModule } from './evidence/evidence.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
+import { AwsModule } from './aws/aws.module.js';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true, envFilePath: ['../../.env', '.env'] }),
     PrismaModule,
+    AwsModule,
     AuthModule,
     UsersModule,
     PropertiesModule,
