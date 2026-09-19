@@ -1,0 +1,34 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Tracehold local escalation Lambda
+
+Globals:
+  Function:
+    Timeout: 30
+    Runtime: nodejs22.x
+
+Resources:
+  EscalationFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: src/handler.handler
+      Description: Receives Tracehold events for future escalation processing.
+      Events:
+        TraceholdEvents:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt TraceholdEventsQueue.Arn
+            BatchSize: 10
+  TraceholdEventsQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: tracehold-events
+
+Outputs:
+  EscalationFunction:
+    Description: Escalation Lambda ARN
+    Value: !GetAtt EscalationFunction.Arn
+  TraceholdEventsQueueUrl:
+    Description: Tracehold event queue URL
+    Value: !Ref TraceholdEventsQueue

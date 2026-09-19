@@ -1,0 +1,20 @@
+{
+  "Records": [
+    {
+      "messageId": "local-message-001",
+      "receiptHandle": "local-receipt",
+      "body": "{\"type\":\"TicketCreated\",\"ticketId\":\"ticket-demo\"}",
+      "attributes": {
+        "ApproximateReceiveCount": "1",
+        "SentTimestamp": "1700000000000",
+        "SenderId": "local",
+        "ApproximateFirstReceiveTimestamp": "1700000000000"
+      },
+      "messageAttributes": {},
+      "md5OfBody": "local",
+      "eventSource": "aws:sqs",
+      "eventSourceARN": "arn:aws:sqs:us-east-1:000000000000:tracehold-events",
+      "awsRegion": "us-east-1"
+    }
+  ]
+}

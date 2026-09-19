@@ -1,0 +1,14 @@
+{
+  "name": "@tracehold/escalation",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@types/aws-lambda": "^8.10.152",
+    "typescript": "^6.0.2"
+  }
+}
