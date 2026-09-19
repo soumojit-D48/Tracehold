@@ -1,4 +1,5 @@
 import { PrismaPg } from '@prisma/adapter-pg';
+import { hash } from 'bcryptjs';
 import { PrismaClient, TicketCategory, TicketSeverity, TicketStatus, UserRole } from '../apps/api/src/generated/prisma/client.js';
 import { Pool } from 'pg';
 
@@ -7,15 +8,26 @@ const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-    const tenant = await prisma.user.upsert({
-        where: { email: 'tenant@tracehold.local' },
-        update: {},
-        create: {
-            name: 'Demo Tenant',
-            email: 'tenant@tracehold.local',
-            role: UserRole.TENANT,
-        },
-    });
+    const demoUsers = [
+        { name: 'Demo Tenant', email: 'tenant@tracehold.local', role: UserRole.TENANT },
+        { name: 'Demo Contractor', email: 'contractor@tracehold.local', role: UserRole.CONTRACTOR },
+        { name: 'Demo Landlord', email: 'landlord@tracehold.local', role: UserRole.LANDLORD },
+        { name: 'Demo Admin', email: 'admin@tracehold.local', role: UserRole.ADMIN },
+    ];
+    const users = await Promise.all(
+        demoUsers.map(async (demoUser) =>
+            prisma.user.upsert({
+                where: { email: demoUser.email },
+                update: { name: demoUser.name, role: demoUser.role },
+                create: {
+                    ...demoUser,
+                    passwordHash: await hash(`tracehold-demo-${demoUser.role.toLowerCase()}`, 12),
+                },
+            }),
+        ),
+    );
+    const tenant = users.find((user) => user.role === UserRole.TENANT);
+    if (!tenant) throw new Error('Demo tenant was not created');
 
     const property = await prisma.property.upsert({
         where: { id: 'maple-residency' },
