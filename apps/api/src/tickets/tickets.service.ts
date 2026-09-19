@@ -1,5 +1,4 @@
 import {
-    BadRequestException,
     ConflictException,
     Injectable,
     NotFoundException,
@@ -8,6 +7,7 @@ import { Prisma, TicketStatus } from '../generated/prisma/client.js';
 import { CreateTicketDto } from './dto/create-ticket.dto.js';
 import { UpdateTicketDto } from './dto/update-ticket.dto.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { AuthUser } from '../auth/auth.types.js';
 
 const ticketInclude = {
     unit: { include: { property: true } },
@@ -18,14 +18,7 @@ const ticketInclude = {
 export class TicketsService {
     constructor(private readonly prisma: PrismaService) { }
 
-    async create(dto: CreateTicketDto) {
-        const tenant = await this.prisma.user.findUnique({
-            where: { email: 'tenant@tracehold.local' },
-        });
-        if (!tenant) {
-            throw new BadRequestException('Seed a demo tenant before creating tickets.');
-        }
-
+    async create(dto: CreateTicketDto, user: AuthUser) {
         return this.prisma.$transaction(async (transaction) => {
             const ticket = await transaction.ticket.create({
                 data: {
@@ -33,12 +26,12 @@ export class TicketsService {
                     category: dto.category,
                     description: dto.description,
                     severity: dto.severity,
-                    createdById: tenant.id,
+                    createdById: user.id,
                 },
                 include: ticketInclude,
             });
             await transaction.ticketEvent.create({
-                data: { ticketId: ticket.id, actorId: tenant.id, type: 'TicketCreated' },
+                data: { ticketId: ticket.id, actorId: user.id, type: 'TicketCreated' },
             });
             return ticket;
         });
