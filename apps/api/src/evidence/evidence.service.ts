@@ -5,6 +5,8 @@ import { resolve } from 'node:path';
 import { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { SearchService, type TicketSearchDocument } from '../search/search.service.js';
+import type { AuthUser } from '../auth/auth.types.js';
+import { AuthorizationService } from '../authorization/authorization.service.js';
 
 type AgentEvent = {
     eventId: string;
@@ -49,9 +51,10 @@ export class EvidenceService {
     constructor(
         private readonly prisma: PrismaService,
         private readonly search: SearchService,
+        private readonly authorization: AuthorizationService,
     ) {}
 
-    async generateEvidence(ticketId: string) {
+    async generateEvidence(ticketId: string, user?: AuthUser) {
         const ticket = await this.prisma.ticket.findUnique({
             where: { id: ticketId },
             include: {
@@ -60,6 +63,7 @@ export class EvidenceService {
             },
         });
         if (!ticket) throw new NotFoundException(`Ticket ${ticketId} was not found.`);
+        if (user) this.authorization.authorize(user, 'GenerateEvidence', this.authorization.ticketResource(ticket));
 
         const history = await this.search.getUnitHistory(ticket.unitId);
         const relatedTickets = history.tickets.filter((item) => item.ticketId !== ticket.id);
@@ -83,6 +87,31 @@ export class EvidenceService {
                 },
             },
         });
+    }
+
+    async getEvidence(ticketId: string, user: AuthUser) {
+        const ticket = await this.prisma.ticket.findUnique({ where: { id: ticketId } });
+        if (!ticket) throw new NotFoundException(`Ticket ${ticketId} was not found.`);
+        this.authorization.authorize(user, 'GenerateEvidence', this.authorization.ticketResource(ticket));
+
+        const evidence = await this.prisma.evidence.findFirst({
+            where: { ticketId },
+            orderBy: { generatedAt: 'desc' },
+        });
+        if (!evidence) throw new NotFoundException(`Evidence for ticket ${ticketId} was not found.`);
+
+        const relatedTickets = evidence.relatedTickets.length === 0
+            ? []
+            : await this.prisma.ticket.findMany({
+                where: { id: { in: evidence.relatedTickets } },
+                include: { unit: { include: { property: true } } },
+                orderBy: { createdAt: 'desc' },
+            });
+        return {
+            ...evidence,
+            relatedTicketIds: evidence.relatedTickets,
+            relatedTickets,
+        };
     }
 
     private toAgentInput(ticket: EvidenceTicket, relatedTickets: TicketSearchDocument[]): AgentInput {
