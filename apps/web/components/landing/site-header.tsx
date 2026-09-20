@@ -3,7 +3,7 @@
 import { ArrowRight, Building2, Menu, X } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@tracehold/ui/button";
 import { ThemeSwitcher } from "./theme-switcher";
 
 const links = [["Product", "#workflow"], ["How it works", "#story"], ["Evidence", "#evidence"], ["Architecture", "#architecture"]];

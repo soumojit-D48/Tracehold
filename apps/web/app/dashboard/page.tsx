@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { Activity, ArrowRight, CheckCircle2, Clock3, FileCheck2, History, RefreshCw, ShieldCheck, TriangleAlert } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@tracehold/ui/button";
+import { Card, CardContent } from "@tracehold/ui/card";
 import { TicketStatus } from "@/components/ticket-status";
 import { ApiError, apiFetch, type Ticket, type TicketEvent } from "@/lib/api";
 import { AppShell } from "@/components/workspace/app-shell";

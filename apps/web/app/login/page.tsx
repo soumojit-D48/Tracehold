@@ -4,8 +4,8 @@ import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowRight, Building2, ShieldCheck } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@tracehold/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@tracehold/ui/card";
 import { ThemeSwitcher } from "@/components/landing/theme-switcher";
 import { ApiError, apiFetch, saveSession, type AuthResponse } from "@/lib/api";
 

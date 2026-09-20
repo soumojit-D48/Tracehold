@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { ArrowRight, History as HistoryIcon, Search, TriangleAlert } from "lucide-react";
 import { FormEvent, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@tracehold/ui/button";
+import { Card, CardContent } from "@tracehold/ui/card";
 import { AppShell } from "@/components/workspace/app-shell";
 import { ApiError, apiFetch } from "@/lib/api";
 

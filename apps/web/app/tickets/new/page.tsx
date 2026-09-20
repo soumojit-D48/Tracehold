@@ -4,8 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
 import { ArrowLeft, Send } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@tracehold/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@tracehold/ui/card";
 import { ApiError, apiFetch, type Ticket } from "@/lib/api";
 import { AppShell } from "@/components/workspace/app-shell";
 

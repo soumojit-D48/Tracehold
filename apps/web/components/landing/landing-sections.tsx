@@ -2,7 +2,7 @@
 
 import { ArrowDown, ArrowRight, BellRing, Check, CircleAlert, Clock3, FileCheck2, FileLock2, Fingerprint, GitBranch, History, LockKeyhole, MessageSquareText, Radio, Search, ShieldCheck, TimerReset, UserCheck, X } from "lucide-react";
 import { useMemo, useState } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@tracehold/ui/button";
 import { IncidentTimeline } from "./incident-timeline";
 
 export function Hero() { return <section id="top" className="mx-auto grid max-w-7xl items-center gap-12 px-6 py-16 lg:min-h-[720px] lg:grid-cols-12"><div className="reveal lg:col-span-5"><div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-2 font-mono text-[10px] uppercase tracking-[0.15em] text-primary shadow-clay-sm"><span className="pulse-dot size-2 rounded-full bg-signal" /> Event-driven maintenance records</div><h1 className="mt-6 max-w-[10ch] font-display text-5xl font-bold leading-[1.03] sm:text-6xl">Keep the trace. Prove what happened.</h1><p className="mt-6 max-w-lg text-lg leading-relaxed text-muted-foreground">Tracehold turns unresolved maintenance complaints into a persistent, auditable trail of actions, delays, recurring issues, and evidence.</p><div className="mt-8 flex flex-wrap gap-3"><Button onClick={() => document.querySelector("#story")?.scrollIntoView({ behavior: "smooth" })}>Follow the complaint <ArrowDown size={16} /></Button><Button variant="outline" onClick={() => document.querySelector("#architecture")?.scrollIntoView({ behavior: "smooth" })}>View architecture <ArrowRight size={16} /></Button></div></div><div className="reveal-delay lg:col-span-7"><IncidentTimeline /></div></section>; }

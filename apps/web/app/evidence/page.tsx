@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { ArrowRight, FileCheck2, RefreshCw, ShieldAlert } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@tracehold/ui/button";
+import { Card, CardContent } from "@tracehold/ui/card";
 import { AppShell } from "@/components/workspace/app-shell";
 import { ApiError, apiFetch, type Ticket } from "@/lib/api";
 

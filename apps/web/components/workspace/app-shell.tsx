@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@tracehold/ui/button";
 import { clearSession } from "@/lib/api";
 import { ThemeSwitcher } from "@/components/landing/theme-switcher";
 
