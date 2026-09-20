@@ -5,6 +5,7 @@ import {
     ESCALATABLE_STATUSES,
     ESCALATION_SLA_MS,
     TicketEventType,
+    type TraceholdQueueEvent,
 } from '@tracehold/shared';
 import { AuthUser } from '../auth/auth.types.js';
 import { AuthorizationService } from '../authorization/authorization.service.js';
@@ -49,7 +50,7 @@ export class DemoService {
 
         const queued = [];
         for (const ticket of tickets) {
-            const event = {
+            const event: TraceholdQueueEvent = {
                 eventId: randomUUID(),
                 eventType: TicketEventType.ESCALATION_DUE,
                 ticketId: ticket.id,

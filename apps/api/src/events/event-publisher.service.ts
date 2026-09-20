@@ -2,7 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { AwsService } from '../aws/aws.service.js';
 import { TicketEventType, type TraceholdQueueEvent } from '@tracehold/shared';
 
-export type TicketCreatedEvent = Extract<TraceholdQueueEvent, { eventType: TicketEventType.TICKET_CREATED }>;
+export type TicketCreatedEvent = {
+    eventId: string;
+    eventType: TicketEventType.TICKET_CREATED;
+    ticketId: string;
+    occurredAt: string;
+};
 
 @Injectable()
 export class EventPublisherService {

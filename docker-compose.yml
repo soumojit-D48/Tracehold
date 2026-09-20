@@ -31,7 +31,7 @@
     container_name: tracehold-localstack
     restart: unless-stopped
     environment:
-      - SERVICES=sqs
+      - SERVICES=sqs,lambda
       - AWS_DEFAULT_REGION=us-east-1
       - DEBUG=0
     ports:
@@ -39,6 +39,7 @@
     volumes:
       - localstack_data:/var/lib/localstack
       - ./infrastructure/localstack/init-aws.sh:/etc/localstack/init/ready.d/init-aws.sh
+      - /var/run/docker.sock:/var/run/docker.sock
 
 volumes:
   postgres_data:
