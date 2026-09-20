@@ -3,9 +3,10 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowRight, ShieldCheck } from "lucide-react";
+import { ArrowRight, Building2, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ThemeSwitcher } from "@/components/landing/theme-switcher";
 import { ApiError, apiFetch, saveSession, type AuthResponse } from "@/lib/api";
 
 export default function LoginPage() {
@@ -16,52 +17,11 @@ export default function LoginPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-        event.preventDefault();
-        setError("");
-        setIsSubmitting(true);
-        try {
-            const session = await apiFetch<AuthResponse>("/auth/login", {
-                method: "POST",
-                body: JSON.stringify({ email, password }),
-            });
-            saveSession(session);
-            router.push("/tickets");
-        } catch (requestError) {
-            setError(requestError instanceof ApiError ? requestError.message : "Unable to sign in.");
-        } finally {
-            setIsSubmitting(false);
-        }
+        event.preventDefault(); setError(""); setIsSubmitting(true);
+        try { const session = await apiFetch<AuthResponse>("/auth/login", { method: "POST", body: JSON.stringify({ email, password }) }); saveSession(session); router.push("/dashboard"); }
+        catch (requestError) { setError(requestError instanceof ApiError ? requestError.message : "Unable to sign in."); }
+        finally { setIsSubmitting(false); }
     }
 
-    return (
-        <main className="min-h-screen bg-[#f4f0e8] px-6 py-12 text-[#19332e]">
-            <div className="mx-auto flex min-h-[calc(100vh-6rem)] max-w-5xl items-center justify-center">
-                <div className="grid w-full overflow-hidden rounded-3xl bg-[#19332e] shadow-2xl shadow-[#19332e]/20 md:grid-cols-[1.1fr_0.9fr]">
-                    <section className="hidden p-12 text-[#f4f0e8] md:block">
-                        <Link href="/" className="text-sm font-semibold tracking-[0.2em] uppercase">Tracehold</Link>
-                        <div className="mt-32 max-w-sm">
-                            <p className="mb-4 text-sm font-semibold tracking-[0.18em] text-[#f0a66a] uppercase">Evidence, not noise</p>
-                            <h1 className="font-heading text-5xl leading-[0.95]">Keep the repair record moving.</h1>
-                            <p className="mt-6 text-lg leading-relaxed text-[#d3ddd7]">A clear trail from first complaint to final resolution.</p>
-                        </div>
-                    </section>
-                    <Card className="rounded-none bg-[#fffdf8] py-8 shadow-none">
-                        <CardHeader className="px-8">
-                            <div className="mb-8 flex size-11 items-center justify-center rounded-2xl bg-[#f0a66a]/20 text-[#b65f31]"><ShieldCheck /></div>
-                            <CardTitle className="font-heading text-3xl text-[#19332e]">Welcome back</CardTitle>
-                            <CardDescription>Sign in to your maintenance workspace.</CardDescription>
-                        </CardHeader>
-                        <CardContent className="px-8">
-                            <form onSubmit={handleSubmit} className="space-y-5">
-                                <label className="block text-sm font-medium">Email<input required type="email" value={email} onChange={(event) => setEmail(event.target.value)} className="mt-2 h-11 w-full rounded-xl border border-[#d8d9d1] bg-white px-3 outline-none focus:border-[#b65f31]" /></label>
-                                <label className="block text-sm font-medium">Password<input required type="password" value={password} onChange={(event) => setPassword(event.target.value)} className="mt-2 h-11 w-full rounded-xl border border-[#d8d9d1] bg-white px-3 outline-none focus:border-[#b65f31]" /></label>
-                                {error && <p role="alert" className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
-                                <Button disabled={isSubmitting} className="h-11 w-full justify-between rounded-xl bg-[#b65f31] px-4 text-white hover:bg-[#934a27]">{isSubmitting ? "Signing in..." : "Sign in"}<ArrowRight /></Button>
-                            </form>
-                        </CardContent>
-                    </Card>
-                </div>
-            </div>
-        </main>
-    );
+    return <main className="min-h-screen bg-background px-4 py-5 text-foreground sm:px-6 sm:py-8"><div className="mx-auto flex max-w-6xl justify-end"><ThemeSwitcher /></div><div className="mx-auto flex min-h-[calc(100vh-7rem)] max-w-6xl items-center justify-center"><div className="grid w-full overflow-hidden rounded-[32px] border border-border bg-ink shadow-ink md:grid-cols-[1.05fr_.95fr]"><section className="hidden p-10 text-mist md:flex md:flex-col md:justify-between lg:p-14"><Link href="/" className="flex items-center gap-3"><span className="grid size-10 place-items-center rounded-xl bg-signal text-signal-foreground"><Building2 size={19} /></span><span className="font-display text-xl font-bold">Tracehold</span></Link><div className="max-w-sm"><p className="eyebrow text-forensic-light">Evidence, not noise</p><h1 className="mt-5 font-display text-5xl leading-[1.02]">Keep the repair record moving.</h1><p className="mt-6 text-lg leading-relaxed text-mist/65">A clear trail from first complaint to final resolution.</p></div><p className="font-mono text-[10px] uppercase tracking-[.14em] text-mist/40">Event-driven maintenance records</p></section><Card className="rounded-none border-0 bg-card py-8 shadow-none sm:py-12"><CardHeader className="px-7 sm:px-10"><div className="mb-8 grid size-11 place-items-center rounded-2xl bg-primary-soft text-primary"><ShieldCheck /></div><CardTitle className="font-display text-3xl">Welcome back</CardTitle><CardDescription>Sign in to your maintenance workspace.</CardDescription></CardHeader><CardContent className="px-7 sm:px-10"><form onSubmit={handleSubmit} className="space-y-5"><label className="block text-sm font-medium">Email<input required type="email" value={email} onChange={(event) => setEmail(event.target.value)} className="mt-2 h-12 w-full rounded-xl border border-input bg-secondary px-3 outline-none transition focus:ring-2 focus:ring-ring" /></label><label className="block text-sm font-medium">Password<input required type="password" value={password} onChange={(event) => setPassword(event.target.value)} className="mt-2 h-12 w-full rounded-xl border border-input bg-secondary px-3 outline-none transition focus:ring-2 focus:ring-ring" /></label>{error && <p role="alert" className="rounded-xl bg-signal-soft px-3 py-2 text-sm text-signal">{error}</p>}<Button disabled={isSubmitting} className="h-12 w-full justify-between rounded-xl">{isSubmitting ? "Signing in..." : "Sign in"}<ArrowRight size={17} /></Button></form><p className="mt-6 text-xs leading-relaxed text-muted-foreground">Demo tenant: `tenant@tracehold.local` / `tracehold-demo-tenant`</p></CardContent></Card></div></div></main>;
 }
