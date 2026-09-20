@@ -1,4 +1,6 @@
-﻿services:
+﻿name: tracehold
+
+services:
   postgres:
     image: postgres:16-alpine
     container_name: tracehold-postgres
@@ -38,7 +40,7 @@
       - "4566:4566"
     volumes:
       - localstack_data:/var/lib/localstack
-      - ./infrastructure/localstack/init-aws.sh:/etc/localstack/init/ready.d/init-aws.sh
+      - ../localstack/init-aws.sh:/etc/localstack/init/ready.d/init-aws.sh
       - /var/run/docker.sock:/var/run/docker.sock
 
 volumes:

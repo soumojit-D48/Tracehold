@@ -1,0 +1,12 @@
+node_modules/
+.next/
+out/
+dist/
+coverage/
+.aws-sam/
+.pnpm-store/
+apps/api/src/generated/prisma/
+apps/api/*.env
+apps/web/.env.local
+*.min.js
+*.map

@@ -1,124 +1,208 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Tracehold API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+[![NestJS](https://img.shields.io/badge/NestJS-12-EA2845?logo=nestjs)](https://nestjs.com/)
+[![Prisma](https://img.shields.io/badge/Prisma-7-2D3748?logo=prisma&logoColor=white)](https://www.prisma.io/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Cedar](https://img.shields.io/badge/Cedar-authorization-6B4EFF)](https://www.cedarpolicy.com/)
+[![Amazon SQS](https://img.shields.io/badge/Amazon%20SQS-events-FF9900?logo=amazonaws&logoColor=white)](https://aws.amazon.com/sqs/)
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+![Tracehold evidence platform](../web/public/hero.png)
 
-## Description
+The API is the NestJS application boundary for Tracehold. It owns authentication, transactional ticket state, authorization enforcement, event publishing, historical search integration, evidence generation, and demo-time control.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Responsibilities
 
-## Project setup
+- Authenticate users with JWTs.
+- Create and persist maintenance tickets.
+- Store chronological ticket events.
+- Ask Cedar for protected-action decisions.
+- Publish minimal queue events to SQS.
+- Read and update the deterministic demo clock.
+- Search historical tickets through OpenSearch.
+- Generate and retrieve evidence records.
 
-```bash
-$ pnpm install
+NestJS owns application state. The browser does not connect directly to PostgreSQL, Cedar, SQS, OpenSearch, or the evidence agent.
+
+## Modules
+
+```text
+src/
+├── auth/             # Login, registration, JWT guard, current user
+├── authorization/    # Cedar WASM authorization service
+├── aws/              # SQS client and event publishing
+├── demo/             # Demo clock and escalation evaluation endpoints
+├── events/           # Ticket event publisher
+├── evidence/         # Evidence generation and retrieval
+├── prisma/           # Prisma client lifecycle
+├── properties/       # Property module
+├── search/           # OpenSearch ticket and unit history search
+├── tickets/          # Ticket CRUD and event timeline
+├── units/            # Unit module
+└── users/            # User module
 ```
 
-## Compile and run the project
+## Data Model
 
-```bash
-# development
-$ pnpm run start
+Prisma/PostgreSQL stores:
 
-# watch mode
-$ pnpm run start:dev
+- `User`: identity, email, password hash, and role
+- `Property`: property name and address
+- `Unit`: unit number and property relationship
+- `Ticket`: complaint, category, severity, status, creator, assignee, and timestamps
+- `TicketEvent`: immutable timeline event type, actor, metadata, and timestamp
+- `Evidence`: summary, timeline, related ticket IDs, notice draft, generated time, and model metadata
+- `DemoClock`: deterministic demo time
 
-# production mode
-$ pnpm run start:prod
+Ticket statuses are:
+
+```text
+OPEN
+IN_PROGRESS
+ESCALATED
+EVIDENCE_READY
+RESOLVED
+CLOSED
 ```
 
-## Run tests
+## API Routes
 
-```bash
-# unit tests
-$ pnpm run test
+Authentication:
 
-# e2e tests
-$ pnpm run test:e2e
-
-# test coverage
-$ pnpm run test:cov
+```text
+POST /auth/register
+POST /auth/login
+GET  /auth/me
 ```
 
-## Deployment
+Tickets:
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ pnpm install -g @nestjs/mau
-$ mau deploy
+```text
+POST  /tickets
+GET   /tickets?status=&unitId=
+GET   /tickets/:id
+GET   /tickets/:id/events
+PATCH /tickets/:id
+POST  /tickets/:id/close
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+Search and evidence:
 
-## Observability
-
-In production applications, observability is essential for understanding how your system behaves, detecting issues early, and maintaining reliable performance.
-
-[NestJS Observe](https://observe.nestjs.com) automatically instruments your NestJS application, giving you deep visibility into your system with minimal setup:
-
-- **Distributed tracing:** Follow requests across services and understand how they flow through your system.
-- **Waterfall analysis:** Visualize request execution and identify slow operations, bottlenecks, and unexpected delays.
-- **Performance analysis:** Analyze application performance in real time and quickly pinpoint areas that need optimization.
-- **Metrics:** Track key application and infrastructure metrics to understand system health and performance trends.
-- **Logging:** Centralize and correlate logs with traces and other telemetry to make debugging easier.
-- **Error tracking:** Detect errors quickly and investigate their root causes with the surrounding context.
-- **SLA monitoring:** Track service-level objectives and identify when your application is approaching or exceeding defined thresholds.
-- **Alarms and alerts:** Set up alerts for critical errors, performance degradation, SLA violations, and other anomalies so your team can react quickly.
-
-To add it to this project:
-
-```bash
-$ pnpm install @nestjs/observe
+```text
+GET  /search/tickets?q=
+GET  /units/:id/history
+POST /tickets/:id/evidence
+GET  /tickets/:id/evidence
 ```
 
-Then follow the [setup guide](https://docs.nestjs.com/observability/overview) - it takes a single import and an app key.
+Demo controls:
 
-The free plan needs no payment details and covers 300,000 events a month. You can also browse the [live demo](https://www.observe-demo.nestjs.com/dashboard) first - the whole dashboard over a busy service's data, with nothing to install.
+```text
+GET  /demo/clock
+POST /demo/clock
+POST /demo/advance-time
+POST /demo/escalations/evaluate
+```
 
-## Resources
+Health:
 
-Check out a few resources that may come in handy when working with NestJS:
+```text
+GET /health
+```
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Auto-instrument your application with [NestJS Observe](https://observe.nestjs.com). Distributed tracing, metrics, and logging made easy. Error tracking and performance monitoring for your NestJS applications.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+All protected routes use the JWT guard. Cedar remains authoritative for protected operations such as closing tickets, setting demo time, evaluating escalations, and generating evidence.
 
-## Support
+## Event Flow
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+```mermaid
+sequenceDiagram
+    participant Client
+    participant API as NestJS API
+    participant DB as PostgreSQL
+    participant Cedar
+    participant Queue as SQS
+    participant Lambda as Escalation Lambda
 
-## Stay in touch
+    Client->>API: POST /tickets
+    API->>Cedar: Authorize CreateTicket
+    Cedar-->>API: ALLOW or DENY
+    API->>DB: Create Ticket and TicketCreated
+    API->>Queue: Publish ticketId and event metadata
+    API-->>Client: Ticket response
+    Lambda->>Queue: Consume event
+    Lambda->>DB: Re-read current ticket and demo clock
+    Lambda->>DB: Apply idempotent escalation transition
+```
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+The queue payload is intentionally small:
 
-## License
+```json
+{
+  "eventId": "event-id",
+  "eventType": "TicketCreated",
+  "ticketId": "ticket-id",
+  "occurredAt": "2026-09-20T12:00:00.000Z"
+}
+```
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+The Lambda worker does not trust stale ticket state from the message. It reads the current database state before transitioning a ticket.
+
+## Configuration
+
+API environment variables are loaded from the repository root `.env` and `apps/api/.env`.
+
+| Variable | Purpose |
+|---|---|
+| `PORT` | API port, normally `3001` |
+| `DATABASE_URL` | PostgreSQL connection string |
+| `JWT_SECRET` | JWT signing secret |
+| `OPENSEARCH_URL` | OpenSearch URL, normally `http://localhost:9200` |
+| `AWS_REGION` | AWS/LocalStack region |
+| `AWS_ENDPOINT_URL` | LocalStack endpoint, normally `http://localhost:4566` |
+| `SQS_QUEUE_NAME` | Queue name, normally `tracehold-events` |
+| `ESCALATION_SLA_HOURS` | Configured escalation SLA |
+
+Never commit real credentials or production secrets.
+
+## Local Development
+
+From the repository root:
+
+```powershell
+pnpm install
+pnpm infra:up
+pnpm prisma migrate deploy
+pnpm prisma:seed
+pnpm --filter api start:dev
+```
+
+The API listens on `http://localhost:3001`.
+
+## Testing and Build
+
+From the repository root:
+
+```powershell
+pnpm --filter api lint
+pnpm --filter api build
+pnpm --filter api test
+pnpm --filter api test:e2e
+```
+
+The API tests cover authentication, tickets, search, evidence, demo clock behavior, authorization, and event publishing.
+
+## Failure Boundaries
+
+- Ticket state is persisted before asynchronous processing.
+- OpenSearch indexing failure does not replace PostgreSQL state.
+- Evidence generation failures must not corrupt tickets or timelines.
+- Cedar denial must fail closed.
+- Replayed escalation messages must not create duplicate transitions.
+
+## Related Documentation
+
+- Root overview: `../../README.md`
+- Architecture: `../../docs/ARCHITECTURE.md`
+- Product requirements: `../../docs/PRD.md`
+- Implementation order: `../../docs/STEPS.md`
+- Database schema: `../../prisma/schema.prisma`
+- Escalation worker: `../../services/escalation/README.md`

@@ -11,7 +11,9 @@
     "prisma": "prisma",
     "prisma:generate": "prisma generate",
     "prisma:seed": "prisma db seed",
-    "infra:up": "docker compose up -d"
+    "infra:up": "docker compose -f infrastructure/docker/docker-compose.yml up -d",
+    "infra:down": "docker compose -f infrastructure/docker/docker-compose.yml down",
+    "infra:logs": "docker compose -f infrastructure/docker/docker-compose.yml logs -f"
   },
   "devDependencies": {
     "@types/pg": "^8.15.5",

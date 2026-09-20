@@ -17,5 +17,5 @@ sam local invoke EscalationFunction --event events/sample-sqs.json
 The local queue is created by LocalStack when the Compose stack starts:
 
 ```powershell
-docker compose up -d localstack
+docker compose -f infrastructure/docker/docker-compose.yml up -d localstack
 ```

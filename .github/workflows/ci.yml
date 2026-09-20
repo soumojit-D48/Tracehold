@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Validate workspace
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql://tracehold:tracehold@localhost:35432/tracehold?schema=public
+      JWT_SECRET: ci-only-secret
+      OPENSEARCH_URL: http://localhost:9200
+      AWS_REGION: us-east-1
+      AWS_ENDPOINT_URL: http://localhost:4566
+      SQS_QUEUE_NAME: tracehold-events
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.32.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install Node dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint workspace
+        run: pnpm lint
+
+      - name: Build workspace
+        run: pnpm build
+
+      - name: Run workspace tests
+        run: pnpm test
+
+      - name: Run evidence agent tests
+        working-directory: apps/agent
+        run: python -m unittest test_agent.py
