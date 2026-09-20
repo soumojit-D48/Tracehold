@@ -19,7 +19,8 @@
       }
     },
     "Unit": { "shape": { "type": "Record", "attributes": {} } },
-    "Property": { "shape": { "type": "Record", "attributes": {} } }
+    "Property": { "shape": { "type": "Record", "attributes": {} } },
+    "System": { "shape": { "type": "Record", "attributes": {} } }
   },
   "actions": {
     "CreateTicket": {
@@ -39,6 +40,12 @@
     },
     "GenerateEvidence": {
       "appliesTo": { "principalTypes": ["User"], "resourceTypes": ["Ticket"] }
+    },
+    "SetDemoClock": {
+      "appliesTo": { "principalTypes": ["User"], "resourceTypes": ["System"] }
+    },
+    "EvaluateEscalations": {
+      "appliesTo": { "principalTypes": ["User"], "resourceTypes": ["System"] }
     }
   }
 }

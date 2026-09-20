@@ -49,3 +49,17 @@ permit (
     resource
 )
 when { principal.role == "ADMIN" || principal.role == "LANDLORD" };
+
+permit (
+    principal,
+    action == Action::"SetDemoClock",
+    resource
+)
+when { principal.role == "ADMIN" };
+
+permit (
+    principal,
+    action == Action::"EvaluateEscalations",
+    resource
+)
+when { principal.role == "ADMIN" };

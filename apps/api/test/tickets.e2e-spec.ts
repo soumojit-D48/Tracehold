@@ -20,7 +20,10 @@ describe('Tickets API (e2e)', () => {
             imports: [AppModule],
         })
             .overrideProvider(EventPublisherService)
-            .useValue({ publishTicketCreated: vi.fn() })
+            .useValue({
+                publish: vi.fn(),
+                publishTicketCreated: vi.fn(),
+            })
             .compile();
 
         app = moduleFixture.createNestApplication();

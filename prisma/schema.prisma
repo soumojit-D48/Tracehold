@@ -124,3 +124,9 @@ model Evidence {
 
     @@index([ticketId])
 }
+
+model DemoClock {
+    id        String   @id
+    now       DateTime
+    updatedAt DateTime @updatedAt
+}

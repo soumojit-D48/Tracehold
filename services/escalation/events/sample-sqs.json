@@ -3,7 +3,7 @@
     {
       "messageId": "local-message-001",
       "receiptHandle": "local-receipt",
-      "body": "{\"type\":\"TicketCreated\",\"ticketId\":\"ticket-demo\"}",
+      "body": "{\"eventId\":\"evt-1\",\"eventType\":\"EscalationDue\",\"ticketId\":\"ticket-unit-304-pipe-leak\",\"occurredAt\":\"2026-09-21T00:00:00.000Z\"}",
       "attributes": {
         "ApproximateReceiveCount": "1",
         "SentTimestamp": "1700000000000",

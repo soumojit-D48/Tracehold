@@ -60,6 +60,9 @@ importers:
       '@prisma/client':
         specifier: 7.10.0
         version: 7.10.0(prisma@7.10.0(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(magicast@0.5.5)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(typescript@6.0.3))(typescript@6.0.3)
+      '@tracehold/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       bcryptjs:
         specifier: ^3.0.2
         version: 3.0.3
@@ -200,12 +203,25 @@ importers:
 
   services/escalation:
     dependencies:
+      '@tracehold/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       '@types/aws-lambda':
         specifier: ^8.10.152
         version: 8.10.163
+      pg:
+        specifier: ^8.23.0
+        version: 8.23.0
       typescript:
         specifier: ^6.0.2
         version: 6.0.3
+    devDependencies:
+      '@types/pg':
+        specifier: ^8.15.5
+        version: 8.23.1
+      tsx:
+        specifier: ^4.19.2
+        version: 4.23.13
 
 packages:
 

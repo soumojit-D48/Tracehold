@@ -13,6 +13,7 @@ import { SearchModule } from './search/search.module.js';
 import { EvidenceModule } from './evidence/evidence.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { AwsModule } from './aws/aws.module.js';
+import { DemoModule } from './demo/demo.module.js';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { AwsModule } from './aws/aws.module.js';
     AuthorizationModule,
     SearchModule,
     EvidenceModule,
+    DemoModule,
   ],
   controllers: [AppController],
   providers: [AppService],

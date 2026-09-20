@@ -18,7 +18,7 @@ export class AwsService implements OnModuleDestroy {
         return this.client.send(new GetQueueUrlCommand({ QueueName: this.queueName }));
     }
 
-    async publishEvent(event: Record<string, string>) {
+    async publishEvent(event: Record<string, string> | { eventId: string; eventType: string; ticketId: string; occurredAt: string }) {
         const { QueueUrl } = await this.getEventsQueueUrl();
         if (!QueueUrl) throw new Error(`SQS queue URL was not found for ${this.queueName}.`);
         return this.client.send(new SendMessageCommand({

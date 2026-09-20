@@ -16,6 +16,6 @@ export class UpdateTicketDto {
     severity?: TicketSeverity;
 
     @IsOptional()
-    @IsEnum(TicketStatus)
+    @IsEnum([TicketStatus.OPEN, TicketStatus.IN_PROGRESS, TicketStatus.RESOLVED])
     status?: TicketStatus;
 }

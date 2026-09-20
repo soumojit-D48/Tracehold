@@ -101,6 +101,12 @@ async function main() {
     }
 
     console.log(`Seeded ${historicalTickets.length} tickets for Maple Residency Unit 304.`);
+
+    await prisma.demoClock.upsert({
+        where: { id: 'global' },
+        update: {},
+        create: { id: 'global', now: new Date() },
+    });
 }
 
 main()

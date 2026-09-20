@@ -10,6 +10,7 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import { AuthUser } from '../auth/auth.types.js';
 import { AuthorizationService } from '../authorization/authorization.service.js';
 import { EventPublisherService } from '../events/event-publisher.service.js';
+import { TicketEventType } from '@tracehold/shared';
 
 const ticketInclude = {
     unit: { include: { property: true } },
@@ -28,6 +29,7 @@ export class TicketsService {
         this.authorization.authorize(user, 'CreateTicket', {
             uid: { type: 'Unit', id: dto.unitId }, attrs: {}, parents: [],
         });
+        const now = await this.prisma.getDemoNow();
         const { ticket, event } = await this.prisma.$transaction(async (transaction) => {
             const ticket = await transaction.ticket.create({
                 data: {
@@ -36,17 +38,18 @@ export class TicketsService {
                     description: dto.description,
                     severity: dto.severity,
                     createdById: user.id,
+                    createdAt: now,
                 },
                 include: ticketInclude,
             });
             const event = await transaction.ticketEvent.create({
-                data: { ticketId: ticket.id, actorId: user.id, type: 'TicketCreated' },
+                data: { ticketId: ticket.id, actorId: user.id, type: 'TicketCreated', createdAt: now },
             });
             return { ticket, event };
         });
         await this.eventPublisher.publishTicketCreated({
             eventId: event.id,
-            eventType: 'TicketCreated',
+            eventType: TicketEventType.TICKET_CREATED,
             ticketId: ticket.id,
             occurredAt: event.createdAt.toISOString(),
         });
@@ -84,6 +87,7 @@ export class TicketsService {
             throw new ConflictException('Closed tickets cannot be updated.');
         }
 
+        const now = await this.prisma.getDemoNow();
         return this.prisma.$transaction(async (transaction) => {
             const ticket = await transaction.ticket.update({
                 where: { id },
@@ -92,7 +96,8 @@ export class TicketsService {
                     description: dto.description,
                     severity: dto.severity,
                     status: dto.status,
-                    resolvedAt: dto.status === TicketStatus.RESOLVED ? new Date() : undefined,
+                    resolvedAt: dto.status === TicketStatus.RESOLVED ? now : undefined,
+                    updatedAt: now,
                 },
                 include: ticketInclude,
             });
@@ -100,6 +105,7 @@ export class TicketsService {
                 data: {
                     ticketId: id,
                     type: dto.status && dto.status !== existing.status ? 'StatusChanged' : 'TicketUpdated',
+                    createdAt: now,
                     metadata: {
                         changes: {
                             category: dto.category,
@@ -121,16 +127,22 @@ export class TicketsService {
             throw new ConflictException('Ticket is already closed.');
         }
 
+        const now = await this.prisma.getDemoNow();
         return this.prisma.$transaction(async (transaction) => {
             const ticket = await transaction.ticket.update({
                 where: { id },
-                data: { status: TicketStatus.CLOSED, resolvedAt: existing.resolvedAt ?? new Date() },
+                data: {
+                    status: TicketStatus.CLOSED,
+                    resolvedAt: existing.resolvedAt ?? now,
+                    updatedAt: now,
+                },
                 include: ticketInclude,
             });
             await transaction.ticketEvent.create({
                 data: {
                     ticketId: id,
                     type: 'TicketClosed',
+                    createdAt: now,
                     metadata: { from: existing.status, to: TicketStatus.CLOSED },
                 },
             });

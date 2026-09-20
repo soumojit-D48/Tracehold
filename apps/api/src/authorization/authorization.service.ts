@@ -63,4 +63,12 @@ export class AuthorizationService {
             parents: [],
         };
     }
+
+    systemResource(): EntityJson {
+        return {
+            uid: { type: 'System', id: 'tracehold' },
+            attrs: {},
+            parents: [],
+        };
+    }
 }

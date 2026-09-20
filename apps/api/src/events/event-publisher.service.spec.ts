@@ -1,4 +1,5 @@
 import { EventPublisherService } from './event-publisher.service.js';
+import { TicketEventType } from '@tracehold/shared';
 
 describe('EventPublisherService', () => {
     it('publishes only the minimal TicketCreated event payload', async () => {
@@ -6,7 +7,7 @@ describe('EventPublisherService', () => {
         const publisher = new EventPublisherService({ publishEvent } as never);
         const event = {
             eventId: 'evt-1',
-            eventType: 'TicketCreated' as const,
+            eventType: TicketEventType.TICKET_CREATED,
             ticketId: 'ticket-1',
             occurredAt: '2026-09-20T00:00:00.000Z',
         };

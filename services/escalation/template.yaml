@@ -12,8 +12,11 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: .
-      Handler: src/handler.handler
-      Description: Receives Tracehold events for future escalation processing.
+      Handler: dist/handler.handler
+      Description: Escalates unresolved tickets after the demo-time SLA.
+      Environment:
+        Variables:
+          DATABASE_URL: postgresql://tracehold:tracehold@host.docker.internal:35432/tracehold?schema=public
       Events:
         TraceholdEvents:
           Type: SQS
