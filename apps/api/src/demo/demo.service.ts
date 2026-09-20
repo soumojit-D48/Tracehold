@@ -4,6 +4,7 @@ import {
     DEMO_CLOCK_ID,
     ESCALATABLE_STATUSES,
     ESCALATION_SLA_MS,
+    EVIDENCE_SLA_MS,
     TicketEventType,
     type TraceholdQueueEvent,
 } from '@tracehold/shared';
@@ -12,6 +13,7 @@ import { AuthorizationService } from '../authorization/authorization.service.js'
 import { EventPublisherService } from '../events/event-publisher.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { SetDemoClockDto } from './dto/set-demo-clock.dto.js';
+import { AdvanceDemoTimeDto } from './dto/advance-demo-time.dto.js';
 
 @Injectable()
 export class DemoService {
@@ -36,14 +38,30 @@ export class DemoService {
         });
     }
 
+    async advanceTime(dto: AdvanceDemoTimeDto, user: AuthUser) {
+        this.authorization.authorize(user, 'SetDemoClock', this.authorization.systemResource());
+        const current = await this.readClock();
+        const now = new Date(current.now.getTime() + dto.hours * 60 * 60 * 1000);
+        await this.prisma.demoClock.update({ where: { id: DEMO_CLOCK_ID }, data: { now } });
+        const queued = await this.queueDueEscalations(now);
+        return { ...queued, now: now.toISOString(), advancedHours: dto.hours };
+    }
+
     async evaluateEscalations(user: AuthUser) {
         this.authorization.authorize(user, 'EvaluateEscalations', this.authorization.systemResource());
         const clock = await this.readClock();
-        const cutoff = new Date(clock.now.getTime() - ESCALATION_SLA_MS);
+        return this.queueDueEscalations(clock.now);
+    }
+
+    private async queueDueEscalations(now: Date) {
+        const cutoff24 = new Date(now.getTime() - ESCALATION_SLA_MS);
+        const cutoff72 = new Date(now.getTime() - EVIDENCE_SLA_MS);
         const tickets = await this.prisma.ticket.findMany({
             where: {
-                status: { in: [...ESCALATABLE_STATUSES] },
-                createdAt: { lte: cutoff },
+                OR: [
+                    { status: { in: [...ESCALATABLE_STATUSES] }, createdAt: { lte: cutoff24 } },
+                    { status: 'ESCALATED', createdAt: { lte: cutoff72 } },
+                ],
             },
             select: { id: true },
         });
@@ -54,14 +72,14 @@ export class DemoService {
                 eventId: randomUUID(),
                 eventType: TicketEventType.ESCALATION_DUE,
                 ticketId: ticket.id,
-                occurredAt: clock.now.toISOString(),
+            occurredAt: now.toISOString(),
             };
             await this.eventPublisher.publish(event);
             queued.push(event);
         }
 
         return {
-            now: clock.now.toISOString(),
+            now: now.toISOString(),
             queued: queued.length,
             ticketIds: queued.map((event) => event.ticketId),
         };

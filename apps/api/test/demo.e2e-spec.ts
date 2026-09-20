@@ -103,6 +103,56 @@ describe('Demo clock and escalation (e2e)', () => {
         expect(published.some((event) => event.ticketId === created.body.id && event.eventType === TicketEventType.ESCALATION_DUE)).toBe(true);
     });
 
+    it('advances the demo clock and reaches evidence-ready after 72 hours', async () => {
+        await request(app.getHttpServer())
+            .post('/demo/clock')
+            .set('Authorization', `Bearer ${adminToken}`)
+            .send({ now: '2026-10-01T00:00:00.000Z' })
+            .expect(201);
+
+        const created = await request(app.getHttpServer())
+            .post('/tickets')
+            .set('Authorization', `Bearer ${tenantToken}`)
+            .send({ unitId, category: 'WATER_DAMAGE', description: '72 hour escalation test leak', severity: 'HIGH' })
+            .expect(201);
+
+        const advanced24 = await request(app.getHttpServer())
+            .post('/demo/advance-time')
+            .set('Authorization', `Bearer ${adminToken}`)
+            .send({ hours: 24 })
+            .expect(201);
+        expect(advanced24.body.now).toBe('2026-10-02T00:00:00.000Z');
+
+        const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+        const client = await pool.connect();
+        try {
+            await processTicketEscalation(client, created.body.id);
+        } finally {
+            client.release();
+            await pool.end();
+        }
+        await expectTicketStatus(prisma, created.body.id, 'ESCALATED');
+
+        await request(app.getHttpServer())
+            .post('/demo/advance-time')
+            .set('Authorization', `Bearer ${adminToken}`)
+            .send({ hours: 48 })
+            .expect(201);
+
+        const retryPool = new Pool({ connectionString: process.env.DATABASE_URL });
+        const retryClient = await retryPool.connect();
+        try {
+            const first = await processTicketEscalation(retryClient, created.body.id);
+            const second = await processTicketEscalation(retryClient, created.body.id);
+            expect(first.action).toBe('evidence_ready');
+            expect(second).toEqual({ ticketId: created.body.id, action: 'skipped', reason: 'already_evidence_ready' });
+        } finally {
+            retryClient.release();
+            await retryPool.end();
+        }
+        await expectTicketStatus(prisma, created.body.id, 'EVIDENCE_READY');
+    });
+
     it('escalates from current database state and ignores a second delivery', async () => {
         const ticket = await prisma.ticket.create({
             data: {
@@ -125,7 +175,12 @@ describe('Demo clock and escalation (e2e)', () => {
         try {
             const first = await processTicketEscalation(client, ticket.id);
             const second = await processTicketEscalation(client, ticket.id);
-            expect(first).toEqual({ ticketId: ticket.id, action: 'escalated', previousStatus: 'OPEN' });
+            expect(first).toEqual({
+                ticketId: ticket.id,
+                action: 'escalated',
+                previousStatus: 'OPEN',
+                eventType: TicketEventType.ESCALATION_24_HOURS,
+            });
             expect(second.action).toBe('skipped');
         } finally {
             client.release();
@@ -135,10 +190,15 @@ describe('Demo clock and escalation (e2e)', () => {
         const stored = await prisma.ticket.findUniqueOrThrow({ where: { id: ticket.id } });
         expect(stored.status).toBe('ESCALATED');
         const events = await prisma.ticketEvent.findMany({ where: { ticketId: ticket.id } });
-        expect(events.map((event) => event.type)).toEqual(['TicketEscalated']);
+        expect(events.map((event) => event.type)).toEqual([TicketEventType.ESCALATION_24_HOURS]);
     });
 
     afterAll(async () => {
         await app.close();
     });
 });
+
+async function expectTicketStatus(prisma: PrismaService, ticketId: string, status: string) {
+    const ticket = await prisma.ticket.findUniqueOrThrow({ where: { id: ticketId } });
+    expect(ticket.status).toBe(status);
+}

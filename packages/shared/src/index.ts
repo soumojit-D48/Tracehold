@@ -28,6 +28,8 @@ export enum TicketEventType {
   TICKET_UPDATED = 'TicketUpdated',
   STATUS_CHANGED = 'StatusChanged',
   TICKET_ESCALATED = 'TicketEscalated',
+  ESCALATION_24_HOURS = 'Escalation24Hours',
+  ESCALATION_72_HOURS = 'Escalation72Hours',
   EVIDENCE_GENERATED = 'EvidenceGenerated',
   TICKET_RESOLVED = 'TicketResolved',
   TICKET_CLOSED = 'TicketClosed',
@@ -37,6 +39,8 @@ export enum TicketEventType {
 export const DEMO_CLOCK_ID = 'global';
 export const ESCALATION_SLA_HOURS = 24;
 export const ESCALATION_SLA_MS = ESCALATION_SLA_HOURS * 60 * 60 * 1000;
+export const EVIDENCE_SLA_HOURS = 72;
+export const EVIDENCE_SLA_MS = EVIDENCE_SLA_HOURS * 60 * 60 * 1000;
 export const ESCALATABLE_STATUSES = [TicketStatus.OPEN, TicketStatus.IN_PROGRESS] as const;
 
 export type QueueEventType = TicketEventType.TICKET_CREATED | TicketEventType.ESCALATION_DUE;
