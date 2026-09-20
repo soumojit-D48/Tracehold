@@ -1,0 +1,12 @@
+const incidentEvents = [
+  { time: "09:41 AM", title: "Complaint reported", detail: "Bathroom ceiling leaking · 3 photos attached", state: "quiet" },
+  { time: "09:41 AM", title: "Ticket created", detail: "TR-1042 · Unit 304 · High priority", state: "quiet" },
+  { time: "+24 HOURS", title: "No response detected", detail: "Acknowledgement window expired", state: "warning" },
+  { time: "+24 HOURS", title: "Escalation triggered", detail: "Property manager and maintenance lead notified", state: "signal" },
+  { time: "+72 HOURS", title: "Historical pattern found", detail: "4 related incidents · same unit · 8 months", state: "primary" },
+  { time: "+72 HOURS", title: "Evidence generated", detail: "Summary and formal notice draft prepared", state: "primary" },
+] as const;
+
+export function IncidentTimeline() {
+  return <div className="rounded-[28px] border border-border bg-card p-5 shadow-clay sm:p-8"><div className="mb-6 flex items-start justify-between gap-4"><div><p className="eyebrow">Incident timeline</p><p className="mt-1 font-display text-xl font-bold">Bathroom leak · Unit 304</p></div><span className="rounded-full bg-signal-soft px-3 py-1 font-mono text-[10px] uppercase text-signal">Escalated</span></div><ol className="relative space-y-3 before:absolute before:bottom-5 before:left-5 before:top-5 before:w-1 before:rounded-full before:bg-timeline">{incidentEvents.map((event, index) => <li key={`${event.title}-${event.time}`} className="event-enter relative flex gap-3" style={{ animationDelay: `${index * 150}ms` }}><span className={`relative z-10 grid size-10 shrink-0 place-items-center rounded-xl font-mono text-[10px] shadow-clay-sm ${event.state === "signal" ? "bg-signal text-signal-foreground shadow-signal" : event.state === "primary" ? "bg-primary text-primary-foreground" : event.state === "warning" ? "bg-signal-soft text-signal" : "bg-secondary text-primary"}`}>{String(index + 1).padStart(2, "0")}</span><div className={`min-w-0 flex-1 rounded-xl border px-4 py-3 shadow-clay-sm ${event.state === "signal" ? "border-signal/20 bg-signal-soft" : event.state === "primary" ? "border-primary/15 bg-primary-soft" : "border-border bg-surface"}`}><div className="flex flex-wrap items-center justify-between gap-1"><p className="text-sm font-semibold">{event.title}</p><span className="font-mono text-[10px] text-muted-foreground">{event.time}</span></div><p className="mt-1 text-xs leading-relaxed text-muted-foreground">{event.detail}</p></div></li>)}</ol></div>;
+}
