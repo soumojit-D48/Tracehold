@@ -17,6 +17,7 @@ Resources:
       Environment:
         Variables:
           DATABASE_URL: postgresql://tracehold:tracehold@host.docker.internal:35432/tracehold?schema=public
+          OPENSEARCH_URL: http://host.docker.internal:9200
       Events:
         TraceholdEvents:
           Type: SQS

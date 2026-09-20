@@ -11,6 +11,7 @@ import { AuthUser } from '../auth/auth.types.js';
 import { AuthorizationService } from '../authorization/authorization.service.js';
 import { EventPublisherService } from '../events/event-publisher.service.js';
 import { TicketEventType } from '@tracehold/shared';
+import { SearchService } from '../search/search.service.js';
 
 const ticketInclude = {
     unit: { include: { property: true } },
@@ -23,6 +24,7 @@ export class TicketsService {
         private readonly prisma: PrismaService,
         private readonly authorization: AuthorizationService,
         private readonly eventPublisher: EventPublisherService,
+        private readonly search: SearchService,
     ) { }
 
     async create(dto: CreateTicketDto, user: AuthUser) {
@@ -53,6 +55,7 @@ export class TicketsService {
             ticketId: ticket.id,
             occurredAt: event.createdAt.toISOString(),
         });
+        await this.search.indexTicket(ticket).catch(() => undefined);
         return ticket;
     }
 
@@ -88,7 +91,7 @@ export class TicketsService {
         }
 
         const now = await this.prisma.getDemoNow();
-        return this.prisma.$transaction(async (transaction) => {
+        const ticket = await this.prisma.$transaction(async (transaction) => {
             const ticket = await transaction.ticket.update({
                 where: { id },
                 data: {
@@ -118,6 +121,8 @@ export class TicketsService {
             });
             return ticket;
         });
+        await this.search.indexTicket(ticket).catch(() => undefined);
+        return ticket;
     }
 
     async close(id: string, user: AuthUser) {
@@ -128,7 +133,7 @@ export class TicketsService {
         }
 
         const now = await this.prisma.getDemoNow();
-        return this.prisma.$transaction(async (transaction) => {
+        const ticket = await this.prisma.$transaction(async (transaction) => {
             const ticket = await transaction.ticket.update({
                 where: { id },
                 data: {
@@ -148,6 +153,8 @@ export class TicketsService {
             });
             return ticket;
         });
+        await this.search.indexTicket(ticket).catch(() => undefined);
+        return ticket;
     }
 
     async findEvents(id: string, user: AuthUser) {

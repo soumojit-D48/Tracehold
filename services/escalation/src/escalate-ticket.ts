@@ -100,6 +100,7 @@ export async function processTicketEscalation(
             ],
         );
         await client.query('COMMIT');
+        await updateSearchStatus(ticketId, transition.status, now).catch(() => undefined);
         return {
             ticketId,
             action: transition.action,
@@ -109,6 +110,23 @@ export async function processTicketEscalation(
     } catch (error) {
         await client.query('ROLLBACK');
         throw error;
+    }
+}
+
+async function updateSearchStatus(ticketId: string, status: string, updatedAt: Date) {
+    const baseUrl = process.env.OPENSEARCH_URL?.replace(/\/$/, '');
+    if (!baseUrl) return;
+
+    const response = await fetch(
+        `${baseUrl}/tracehold-tickets/_update/${encodeURIComponent(ticketId)}?refresh=wait_for`,
+        {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ doc: { status, updatedAt: updatedAt.toISOString() } }),
+        },
+    );
+    if (!response.ok && response.status !== 404) {
+        throw new Error(`OpenSearch status projection failed with HTTP ${response.status}`);
     }
 }
 
